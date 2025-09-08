@@ -1,33 +1,86 @@
 # Oncall TUI
 
-Terminal dashboard for Sentry issues, API health latency, and Kubernetes pods, built with Bubble Tea, Bubbles, and Lip Gloss.
+Terminal dashboard for Sentry issues, API health latency, Kubernetes pods, and live pod logs, built with Bubble Tea, Bubbles, and Lip Gloss.
 
 ## Features
 
-- Recent Sentry errors from multiple projects
-- Analytics pane with Sentry issue counts and API latency (curl)
-- Kubernetes pods overview with status colors and selection
-- Pod log viewer (`l` on selected pod, `Esc` to exit)
-- Pane navigation: `Tab` / `Shift+Tab`, pod navigation: `↑/k` and `↓/j`
+- **Sentry errors (multiple projects)**: Lists recent unresolved issues for `siip-ticketing` and `siip-iam-service` using `sentry-cli`.
+- **Analytics pane**:
+  - **Sentry totals**: Counts of current issues per project.
+  - **API latency**: Measures response times for `https://ticketing.siip.io/health` and `https://iam.siip.io/health` via `curl`.
+  - **IAM health details**: Parses status and lists group statuses by querying subgroup endpoints.
+- **Kubernetes pods overview**:
+  - Fetches `kubectl get pods` and colorizes pod rows by status (Running/Pending/Error states).
+  - Shows the current kube context in the pane title.
+  - Navigate the list and open logs for the selected pod.
+- **Live pod log viewer**:
+  - Streams the last lines (`kubectl logs --tail=500`) for the selected pod.
+  - Scroll with arrow keys or mouse wheel, press `Esc` to return.
+- **UX details**:
+  - Splash screen on startup with version.
+  - Auto-refresh of panes on a 15s tick, with Sentry errors refreshed at least every 60s.
+  - Clean keybindings for navigation across panes and within pods.
 
 ## Requirements
 
-- Go 1.20+
-- `sentry-cli` in PATH and authenticated (`sentry-cli login`)
-- `kubectl` in PATH and a current context
-- `curl` in PATH
+- **Go**: 1.24+
+- **External tools in PATH**:
+  - `sentry-cli`
+  - `kubectl`
+  - `curl`
 
-## Setup
+## Setup: External Tools
 
-```bash
-# install deps (modules auto-resolve on build)
-go mod tidy
-```
+### sentry-cli
+
+- Install:
+  - macOS (Homebrew):
+    ```bash
+    brew install getsentry/tools/sentry-cli
+    ```
+  - macOS/Linux (curl script): see `sentry-cli` install instructions.
+- Authenticate:
+  - Interactive login:
+    ```bash
+    sentry-cli login
+    ```
+  - Or set a token via environment variable:
+    ```bash
+    export SENTRY_AUTH_TOKEN=YOUR_TOKEN
+    ```
+- Verify:
+  ```bash
+  sentry-cli info
+  sentry-cli issues list --org siip --project siip-ticketing | head -n 5 | cat
+  ```
+
+### kubectl
+
+- Install (macOS):
+  ```bash
+  brew install kubectl
+  ```
+- Ensure you have a valid kubeconfig/current context and permissions.
+- Verify:
+  ```bash
+  kubectl config current-context | cat
+  kubectl get pods | head -n 10 | cat
+  ```
+
+### curl
+
+- Preinstalled on macOS/Linux. Verify:
+  ```bash
+  curl --version | cat
+  ```
 
 ## Build
 
 ```bash
-# macOS (local)
+# Resolve modules
+go mod tidy
+
+# Local build (macOS)
 go build -o oncall .
 
 # Linux amd64
@@ -49,18 +102,26 @@ go run main.go
 
 ## Keybindings
 
-- Global: `q` or `Ctrl+C` to quit, `Tab`/`Shift+Tab` to switch panes
-- Pods pane: `↑/k` and `↓/j` to move selection, `l` to view logs, `Esc` to return
+- **Global**: `q` or `Ctrl+C` to quit, `Tab` / `Shift+Tab` to switch panes
+- **Pods pane**: `↑/k` and `↓/j` to move selection, `l` to view logs, `Esc` to return
 
 ## Configuration
 
-- Sentry org/projects/queries are configured in code (see `getSentryErrorLogsCmd` and `getSentryStatsCmd`).
-- API endpoints for latency checks are configured in `getApiResponseTimesCmd`.
+- Sentry org/projects/queries are configured in code: `getSentryErrorLogsCmd` and `getSentryStatsCmd` in `sentry.go`.
+- API endpoints for latency checks are configured in `getApiResponseTimesCmd` in `health.go`.
+- Kubernetes context is read from your current `kubectl` context; switch via `kubectl config use-context`.
 
 ## Notes
 
-- The app makes shell calls via `os/exec` to `sentry-cli`, `kubectl`, and `curl`.
-- The log viewer uses Bubble’s `viewport` for smooth scrolling.
+- The app makes shell calls via `os/exec` to `sentry-cli`, `kubectl`, and `curl`; ensure these are accessible and authenticated where needed.
+- Pod coloring heuristics cover common statuses: Running (green), Pending/Initializing (yellow), Error/CrashLoopBackOff/ImagePullBackOff (red).
+- A `.gitignore` is included to avoid committing build artifacts, logs, and OS/editor files.
+
+## Troubleshooting
+
+- **Sentry panes empty**: Verify `sentry-cli login` or `SENTRY_AUTH_TOKEN` and project access.
+- **Kubernetes pane errors**: Verify kube context (`kubectl config current-context`) and cluster RBAC.
+- **API latency errors**: Ensure `curl` is installed and the endpoints are reachable from your network.
 
 ## License
 

@@ -1,0 +1,53 @@
+# Binaries
+oncall
+oncall-*
+*.exe
+*.dll
+*.so
+*.dylib
+
+# Build dirs
+bin/
+build/
+dist/
+release/
+
+# Go
+*.test
+*.out
+coverage*
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Linux
+*~
+.nfs*
+
+# Windows
+Thumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# IDE/editors
+.vscode/
+.idea/
+*.code-workspace
+*.swp
+*.swo
+*.swn
+*.swm
+*.swl
+
+# Logs
+*.log
+
+# Env
+.env
+.env.*
+
+# Misc
+*.tmp
+*.bak

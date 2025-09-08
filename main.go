@@ -40,7 +40,6 @@ type splashTimerMsg time.Time
 type errMsg error
 
 func (m model) Init() tea.Cmd {
-	m.showSplash = true
 	return tea.Batch(
 		getSentryErrorLogsCmd(),
 		getSentryStatsCmd(),
@@ -271,7 +270,7 @@ func splashTimerCmd() tea.Cmd {
 }
 
 func main() {
-	p := tea.NewProgram(model{}, tea.WithAltScreen())
+	p := tea.NewProgram(model{showSplash: true}, tea.WithAltScreen())
 	if _, err := p.Run(); err != nil {
 		log.Fatal(err)
 	}

@@ -75,8 +75,10 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: binaries
-          path: dist/*.{zip,tar.gz}
+          name: binaries-${{ matrix.os }}-${{ matrix.arch }}
+          path: |
+            dist/*.zip
+            dist/*.tar.gz
           if-no-files-found: error
 
   release:
@@ -87,8 +89,9 @@ jobs:
       - name: Download build artifacts
         uses: actions/download-artifact@v4
         with:
-          name: binaries
           path: dist
+          pattern: binaries-*
+          merge-multiple: true
 
       - name: Compute tag
         id: tag

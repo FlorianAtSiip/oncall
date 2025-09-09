@@ -1,5 +1,8 @@
 # Oncall TUI
 
+> [!IMPORTANT]  
+> This program was never designed to be compatible with other systems, it was strictly written for my own use case. If you would like to use this for your own services you'll have to modify the source code yourself and build the project.
+
 Terminal dashboard for Sentry issues, API health latency, Kubernetes pods, and live pod logs, built with Bubble Tea, Bubbles, and Lip Gloss.
 
 ## Features
